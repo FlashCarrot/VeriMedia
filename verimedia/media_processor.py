@@ -37,9 +37,12 @@ def extract_text_from_file(file_path):
         return None, "Error: The legacy .doc format is not supported. Please convert to .docx or .txt."
     elif file_extension == 'pdf':
         try:
-            import PyPDF2
+            try:
+                import pypdf as pdf_lib
+            except ImportError:
+                import PyPDF2 as pdf_lib
             with open(file_path, 'rb') as f:
-                pdf_reader = PyPDF2.PdfReader(f)
+                pdf_reader = pdf_lib.PdfReader(f)
                 pages_text = []
                 for page in pdf_reader.pages:
                     extracted = page.extract_text()
@@ -47,7 +50,7 @@ def extract_text_from_file(file_path):
                         pages_text.append(extracted)
                 content = "\n".join(pages_text)
         except ImportError:
-            return None, "Error: To analyze PDF documents, please install the PyPDF2 library."
+            return None, "Error: To analyze PDF documents, please install the pypdf library."
         except Exception as e:
             return None, f"Error reading PDF document: {str(e)}"
     else:
