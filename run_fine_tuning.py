@@ -13,11 +13,15 @@ from openai import OpenAI
 # Load environment variables
 load_dotenv()
 
-# Initialize OpenAI client
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+def get_client():
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY not found in environment. Please add it to your .env file.")
+    return OpenAI(api_key=api_key)
 
 def create_fine_tuning_job(training_file_id, validation_file_id=None, model="gpt-3.5-turbo"):
     """Create a fine-tuning job with OpenAI API."""
+    client = get_client()
     print(f"Creating fine-tuning job with model {model}...")
     
     job_params = {
@@ -40,6 +44,7 @@ def create_fine_tuning_job(training_file_id, validation_file_id=None, model="gpt
 
 def upload_file(file_path, purpose="fine-tune"):
     """Upload a file to OpenAI API."""
+    client = get_client()
     print(f"Uploading {file_path}...")
     
     try:
@@ -56,6 +61,7 @@ def upload_file(file_path, purpose="fine-tune"):
 
 def monitor_fine_tuning_job(job_id, check_interval=60):
     """Monitor the status of a fine-tuning job."""
+    client = get_client()
     print(f"Monitoring fine-tuning job {job_id}...")
     
     while True:
@@ -90,6 +96,7 @@ def monitor_fine_tuning_job(job_id, check_interval=60):
 def list_fine_tuned_models():
     """List all fine-tuned models."""
     try:
+        client = get_client()
         models = client.models.list()
         
         fine_tuned_models = [model for model in models.data if "toxicity" in model.id]
@@ -138,11 +145,11 @@ def main():
     fine_tuned_model = monitor_fine_tuning_job(job_id, args.interval)
     
     if fine_tuned_model:
-        # Save the model ID to a file for easy access
-        with open("fine_tuned_model.txt", "w") as f:
+        # Save the model ID to finetune_model_id.txt for app.py compatibility
+        with open("finetune_model_id.txt", "w") as f:
             f.write(fine_tuned_model)
             
-        print(f"Model ID saved to fine_tuned_model.txt")
+        print("Model ID saved to finetune_model_id.txt")
         print("Add the following line to your .env file:")
         print(f"FINE_TUNED_MODEL={fine_tuned_model}")
 

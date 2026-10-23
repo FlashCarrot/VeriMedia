@@ -34,6 +34,17 @@
                     <ul class="navbar-nav">
                         <li class="nav-item"><a href="{{ url_for('index') }}" class="nav-link">Home</a></li>
                         <li class="nav-item"><a href="{{ url_for('about') }}" class="nav-link">About</a></li>
+                        <li class="nav-item">
+                            <button type="button" class="api-status-btn {% if api_status and not api_status.is_demo %}status-live{% else %}status-demo{% endif %}" id="open-api-modal-btn" title="Configure OpenAI API Key or Demo Mode">
+                                <span class="status-dot"></span>
+                                {% if api_status and not api_status.is_demo %}
+                                    <span>Live AI ({{ 'Session Key' if api_status.source == 'session' else '.env Key' }})</span>
+                                {% else %}
+                                    <span>Demo Mode (Configure API Key)</span>
+                                {% endif %}
+                                <i class="fas fa-Sliders-h fa-cog"></i>
+                            </button>
+                        </li>
                     </ul>
                 </div>
                 <div class="navbar-toggle">
@@ -44,6 +55,52 @@
             </div>
         </nav>
     </header>
+
+    <!-- API Key & Demo Mode Configuration Modal -->
+    <div class="api-modal-backdrop" id="api-modal-backdrop">
+        <div class="api-modal" role="dialog" aria-labelledby="api-modal-title" aria-modal="true">
+            <div class="api-modal-header">
+                <h3 id="api-modal-title"><i class="fas fa-key"></i> AI Engine &amp; API Key Settings</h3>
+                <button type="button" class="close-btn" id="close-api-modal-btn">&times;</button>
+            </div>
+            <form action="{{ url_for('update_api_settings') }}" method="post" class="api-modal-form">
+                <p class="api-modal-desc">
+                    Provide an OpenAI API Key for this browser session, or use <strong>Interactive Demo Mode</strong> to test VeriMedia's full analysis, Chinese/English word clouds, and PDF reports without an API key.
+                </p>
+                <div class="form-group">
+                    <label for="api-key-input">OpenAI API Key</label>
+                    <input type="password" id="api-key-input" name="api_key" class="form-control" placeholder="sk-..." autocomplete="off">
+                    <small class="form-hint">
+                        {% if api_status and api_status.has_env_key %}
+                            <i class="fas fa-check-circle" style="color: var(--success-color);"></i> Server <code>.env</code> key is present. Leave blank to use server default.
+                        {% elif api_status and api_status.has_session_key %}
+                            <i class="fas fa-check-circle" style="color: var(--success-color);"></i> Session API key is currently active.
+                        {% else %}
+                            <i class="fas fa-info-circle"></i> Stored only in your temporary session cookie.
+                        {% endif %}
+                    </small>
+                </div>
+                <div class="form-group">
+                    <label for="base-url-input">Custom Base URL (Optional)</label>
+                    <input type="url" id="base-url-input" name="base_url" class="form-control" placeholder="https://api.openai.com/v1" value="{{ api_status.base_url if api_status else '' }}">
+                </div>
+                <div class="form-group checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="force_demo" {% if api_status and api_status.force_demo %}checked{% endif %}>
+                        <span>Force Interactive Demo Mode (offline heuristic &amp; sample analysis)</span>
+                    </label>
+                </div>
+                <div class="api-modal-actions">
+                    <button type="submit" name="action" value="save" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Settings
+                    </button>
+                    <button type="submit" name="action" value="clear" class="btn btn-secondary">
+                        <i class="fas fa-eraser"></i> Reset
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <main>
         <div class="container">
@@ -96,4 +153,4 @@
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block extra_js %}{% endblock %}
 </body>
-</html> 
+</html>

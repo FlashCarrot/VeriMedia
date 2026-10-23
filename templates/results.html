@@ -2,6 +2,61 @@
 
 {% block title %}Analysis Results - VeriMedia{% endblock %}
 
+{% block extra_css %}
+<style>
+    .positive-words {
+        padding: 15px;
+        background-color: #f0f8f0;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    
+    .positive-message {
+        font-size: 18px;
+        color: #2e7d32;
+        margin-bottom: 15px;
+        font-weight: 500;
+    }
+    
+    .positive-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .positive-tag {
+        background-color: #4caf50;
+        color: white;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 14px;
+        display: inline-block;
+        font-weight: 500;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .positive-tag:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    .demo-banner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        background-color: rgba(245, 158, 11, 0.1);
+        border-left: 4px solid var(--warning-color);
+        padding: 0.85rem 1.25rem;
+        border-radius: var(--border-radius);
+        margin-bottom: 1.5rem;
+        color: var(--gray-800);
+        font-size: 0.95rem;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <section class="results-section">
     <div class="section-header">
@@ -10,6 +65,15 @@
     </div>
     
     <div class="results-container">
+        {% if result.is_demo %}
+        <div class="demo-banner">
+            <div>
+                <i class="fas fa-flask" style="color: var(--warning-color); margin-right: 0.5rem;"></i>
+                <strong>Interactive Demo Mode:</strong> Analyzed using VeriMedia's built-in multilingual ethical heuristic engine. Configure an OpenAI API key in the top navigation bar to run live GPT-4o &amp; Whisper analysis.
+            </div>
+        </div>
+        {% endif %}
+
         <div class="results-summary">
             <div class="toxicity-meter">
                 <h3>Toxicity Level</h3>
@@ -43,6 +107,7 @@
             
             <div class="results-actions">
                 <form action="{{ url_for('download_report_pdf') }}" method="post">
+                    <input type="hidden" name="result_id" value="{{ result.result_id or '' }}">
                     <input type="hidden" name="toxicity_level" value="{{ result.toxicity_level }}">
                     <input type="hidden" name="report_content" value="{{ result.report }}">
                     <button type="submit" class="btn btn-primary">
@@ -84,7 +149,8 @@
                                 <span class="positive-tag">Responsible</span>
                             </div>
                         </div>
-                    {% elif result.suggestions %}
+                    {% endif %}
+                    {% if result.suggestions %}
                         <ul class="suggestions-list">
                             {% for suggestion in result.suggestions %}
                                 <li class="suggestion-item">
@@ -97,7 +163,7 @@
                                 </li>
                             {% endfor %}
                         </ul>
-                    {% else %}
+                    {% elif result.toxicity_level|lower != 'none' %}
                         <p class="no-data">No suggestions available.</p>
                     {% endif %}
                 </div>
@@ -105,8 +171,12 @@
                 <div class="tab-pane" id="report-tab">
                     <h3>Comprehensive Report</h3>
                     <div class="report-content">
-                        {% if result.report %}
-                            <p>{{ result.report|safe }}</p>
+                        {% if result.report_paragraphs %}
+                            {% for para in result.report_paragraphs %}
+                                <p>{{ para }}</p>
+                            {% endfor %}
+                        {% elif result.report %}
+                            <p>{{ result.report }}</p>
                         {% else %}
                             <p class="no-data">No report available.</p>
                         {% endif %}
@@ -117,7 +187,13 @@
                 <div class="tab-pane" id="transcription-tab">
                     <h3>Full Transcription</h3>
                     <div class="transcription-content">
-                        <p>{{ result.transcription|safe }}</p>
+                        {% if result.transcription_paragraphs %}
+                            {% for para in result.transcription_paragraphs %}
+                                <p>{{ para }}</p>
+                            {% endfor %}
+                        {% else %}
+                            <p>{{ result.transcription }}</p>
+                        {% endif %}
                     </div>
                 </div>
                 {% endif %}
@@ -150,20 +226,15 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Tab switching functionality
         const tabButtons = document.querySelectorAll('.tab-btn');
         const tabPanes = document.querySelectorAll('.tab-pane');
         
         tabButtons.forEach(button => {
             button.addEventListener('click', function() {
-                // Remove active class from all buttons and panes
                 tabButtons.forEach(btn => btn.classList.remove('active'));
                 tabPanes.forEach(pane => pane.classList.remove('active'));
                 
-                // Add active class to clicked button
                 this.classList.add('active');
-                
-                // Show corresponding tab pane
                 const tabId = this.getAttribute('data-tab');
                 document.getElementById(`${tabId}-tab`).classList.add('active');
             });
@@ -171,44 +242,3 @@
     });
 </script>
 {% endblock %}
-
-{% block extra_css %}
-<style>
-    .positive-words {
-        padding: 15px;
-        background-color: #f0f8f0;
-        border-radius: 8px;
-        margin-bottom: 20px;
-    }
-    
-    .positive-message {
-        font-size: 18px;
-        color: #2e7d32;
-        margin-bottom: 15px;
-        font-weight: 500;
-    }
-    
-    .positive-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-    
-    .positive-tag {
-        background-color: #4caf50;
-        color: white;
-        padding: 8px 15px;
-        border-radius: 20px;
-        font-size: 14px;
-        display: inline-block;
-        font-weight: 500;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-    
-    .positive-tag:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    }
-</style>
-{% endblock %} 

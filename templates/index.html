@@ -12,7 +12,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(15, 23, 42, 0.85); /* Using gray-900 with opacity */
+        background-color: rgba(15, 23, 42, 0.85);
         z-index: 9999;
         justify-content: center;
         align-items: center;
@@ -111,11 +111,13 @@
 <section id="upload-section" class="upload-section">
     <div class="section-header">
         <h2>Analyze Your Media</h2>
-        <p>Upload text, audio, or video content for AI-powered analysis</p>
+        <p>Upload text, audio, or video content — or paste text directly for instant analysis</p>
     </div>
     
     <div class="upload-container">
         <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data" class="upload-form" id="analysis-form">
+            <input type="hidden" name="input_mode" id="input-mode" value="file">
+
             <div class="file-type-selector">
                 <div class="file-type-option">
                     <input type="radio" name="file_type" id="text-type" value="text" checked>
@@ -139,19 +141,45 @@
                     </label>
                 </div>
             </div>
+
+            <!-- Text Input Sub-Mode Switcher (Upload File vs Paste Text / Presets) -->
+            <div class="input-mode-tabs" id="text-mode-switcher">
+                <button type="button" class="mode-tab-btn active" data-mode="file">
+                    <i class="fas fa-file-upload"></i> Upload Document (.txt, .pdf, .docx)
+                </button>
+                <button type="button" class="mode-tab-btn" data-mode="paste">
+                    <i class="fas fa-keyboard"></i> Paste Text / Try Sample
+                </button>
+            </div>
             
-            <div class="file-upload-area">
+            <!-- File Upload Panel -->
+            <div class="file-upload-area" id="file-upload-panel">
                 <div class="file-upload-placeholder">
                     <i class="fas fa-cloud-upload-alt"></i>
                     <p>Drag and drop your file here or click to browse</p>
-                    <span class="file-format-hint" id="format-hint">Supported formats: .txt, .pdf, .doc, .docx</span>
+                    <span class="file-format-hint" id="format-hint">Supported formats: .txt, .pdf, .docx</span>
                 </div>
                 <input type="file" name="file" id="file-input" class="file-input">
+            </div>
+
+            <!-- Direct Text & Sample Presets Panel -->
+            <div class="text-paste-area" id="text-paste-panel" style="display: none;">
+                <div class="sample-presets-bar">
+                    <span class="presets-label"><i class="fas fa-flask"></i> Quick Samples:</span>
+                    {% if sample_presets %}
+                        {% for key, preset in sample_presets.items() %}
+                            <button type="button" class="preset-chip" data-sample="{{ preset.content }}">
+                                {{ preset.title }}
+                            </button>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <textarea name="text_content" id="text-content-input" class="form-control text-paste-textarea" rows="6" placeholder="Paste article text, transcript, or social media copy here (supports English, 中文, Français, Español, العربية)..."></textarea>
             </div>
             
             <div class="upload-actions">
                 <button type="submit" class="btn btn-primary btn-upload">
-                    <i class="fas fa-analytics"></i> Analyze Content
+                    <i class="fas fa-search-plus"></i> Analyze Content
                 </button>
             </div>
         </form>
@@ -246,16 +274,57 @@
         const analysisForm = document.getElementById('analysis-form');
         const loadingOverlay = document.getElementById('loading-overlay');
         const progressBar = document.getElementById('loading-progress-bar');
+
+        const inputModeField = document.getElementById('input-mode');
+        const textModeSwitcher = document.getElementById('text-mode-switcher');
+        const modeTabBtns = document.querySelectorAll('.mode-tab-btn');
+        const fileUploadPanel = document.getElementById('file-upload-panel');
+        const textPastePanel = document.getElementById('text-paste-panel');
+        const textContentInput = document.getElementById('text-content-input');
+        const presetChips = document.querySelectorAll('.preset-chip');
+
+        function setInputMode(mode) {
+            inputModeField.value = mode;
+            modeTabBtns.forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-mode') === mode);
+            });
+            if (mode === 'paste') {
+                fileUploadPanel.style.display = 'none';
+                textPastePanel.style.display = 'block';
+            } else {
+                fileUploadPanel.style.display = 'block';
+                textPastePanel.style.display = 'none';
+            }
+        }
+
+        modeTabBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                setInputMode(this.getAttribute('data-mode'));
+            });
+        });
+
+        presetChips.forEach(chip => {
+            chip.addEventListener('click', function() {
+                setInputMode('paste');
+                textContentInput.value = this.getAttribute('data-sample');
+                textContentInput.focus();
+            });
+        });
         
         // Update format hint based on selected file type
         fileTypeInputs.forEach(input => {
             input.addEventListener('change', function() {
                 if (this.value === 'text') {
-                    formatHint.textContent = 'Supported formats: .txt, .pdf, .doc, .docx';
+                    textModeSwitcher.style.display = 'flex';
+                    if (formatHint) formatHint.textContent = 'Supported formats: .txt, .pdf, .docx';
                 } else if (this.value === 'audio') {
-                    formatHint.textContent = 'Supported formats: .mp3, .wav, .ogg, .m4a, .flac';
+                    textModeSwitcher.style.display = 'none';
+                    setInputMode('file');
+                    if (formatHint) formatHint.textContent = 'Supported formats: .mp3, .wav, .ogg, .m4a, .flac';
                 } else if (this.value === 'video') {
-                    formatHint.textContent = 'Supported formats: .mp4, .webm, .mpeg, .mov (MOV files will be automatically converted)';
+                    textModeSwitcher.style.display = 'none';
+                    setInputMode('file');
+                    if (formatHint) formatHint.textContent = 'Supported formats: .mp4, .webm, .mpeg, .mov, .avi, .mkv';
                 }
             });
         });
@@ -264,17 +333,23 @@
         fileInput.addEventListener('change', function() {
             if (this.files.length > 0) {
                 const fileName = this.files[0].name;
-                uploadPlaceholder.innerHTML = `
-                    <i class="fas fa-file"></i>
-                    <p>${fileName}</p>
-                    <span class="file-selected">File selected. Click "Analyze Content" to proceed.</span>
-                `;
+                uploadPlaceholder.innerHTML = '';
+                const icon = document.createElement('i');
+                icon.className = 'fas fa-file';
+                const p = document.createElement('p');
+                p.textContent = fileName;
+                const span = document.createElement('span');
+                span.className = 'file-selected';
+                span.textContent = 'File selected. Click "Analyze Content" to proceed.';
+                uploadPlaceholder.appendChild(icon);
+                uploadPlaceholder.appendChild(p);
+                uploadPlaceholder.appendChild(span);
                 uploadPlaceholder.classList.add('file-selected');
             } else {
                 uploadPlaceholder.innerHTML = `
                     <i class="fas fa-cloud-upload-alt"></i>
                     <p>Drag and drop your file here or click to browse</p>
-                    <span class="file-format-hint" id="format-hint">Supported formats: .txt, .pdf, .doc, .docx</span>
+                    <span class="file-format-hint" id="format-hint">Supported formats: .txt, .pdf, .docx</span>
                 `;
                 uploadPlaceholder.classList.remove('file-selected');
             }
@@ -282,51 +357,43 @@
         
         // Show loading overlay when form is submitted
         analysisForm.addEventListener('submit', function(event) {
-            // Check if file is selected
-            if (!fileInput.files || fileInput.files.length === 0) {
-                event.preventDefault();
-                alert('Please select a file to analyze.');
-                return;
+            const selectedType = document.querySelector('input[name="file_type"]:checked').value;
+            const currentMode = inputModeField.value;
+
+            if (selectedType === 'text' && currentMode === 'paste') {
+                if (!textContentInput.value.trim()) {
+                    event.preventDefault();
+                    alert('Please paste text or choose a quick sample to analyze.');
+                    return;
+                }
+            } else {
+                if (!fileInput.files || fileInput.files.length === 0) {
+                    event.preventDefault();
+                    alert('Please select a file to analyze.');
+                    return;
+                }
             }
             
-            // Show loading overlay
             loadingOverlay.style.display = 'flex';
-            
-            // Simulate progress for better UX
             simulateProgress();
         });
         
-        // Function to simulate progress for better user experience
         function simulateProgress() {
             let progress = 0;
             const selectedFileType = document.querySelector('input[name="file_type"]:checked').value;
-            
-            // Determine progress duration based on file type
-            // Videos take longer, then audio, then text
             const maxDuration = selectedFileType === 'video' ? 60000 : 
                                selectedFileType === 'audio' ? 30000 : 15000;
             
             const interval = setInterval(function() {
-                // Increment progress
                 progress += 1;
-                
-                // Calculate current width percentage (never reaches 100%)
                 let width;
                 if (progress < 85) {
-                    // Faster at first, then slows down
                     width = Math.min(progress * 1.1, 85);
                 } else {
-                    // Very slow at the end
                     width = 85 + (progress - 85) * 0.1;
                 }
-                
-                // Cap at 95% to indicate something is still happening
                 width = Math.min(width, 95);
-                
-                // Update progress bar
                 progressBar.style.width = width + '%';
-                
-                // Clear interval when max time is reached
                 if (progress * 100 >= maxDuration) {
                     clearInterval(interval);
                 }
@@ -346,32 +413,20 @@
         }
         
         ['dragenter', 'dragover'].forEach(eventName => {
-            dropArea.addEventListener(eventName, highlight, false);
+            dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false);
         });
         
         ['dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, unhighlight, false);
+            dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false);
         });
         
-        function highlight() {
-            dropArea.classList.add('highlight');
-        }
-        
-        function unhighlight() {
-            dropArea.classList.remove('highlight');
-        }
-        
-        dropArea.addEventListener('drop', handleDrop, false);
-        
-        function handleDrop(e) {
+        dropArea.addEventListener('drop', function(e) {
             const dt = e.dataTransfer;
             const files = dt.files;
             fileInput.files = files;
-            
-            // Trigger change event
             const event = new Event('change');
             fileInput.dispatchEvent(event);
-        }
+        }, false);
     });
 </script>
-{% endblock %} 
+{% endblock %}

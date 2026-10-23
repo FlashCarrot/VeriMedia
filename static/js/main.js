@@ -9,9 +9,34 @@ document.addEventListener('DOMContentLoaded', function() {
             navbarMenu.classList.toggle('active');
         });
     }
+
+    // API Key & Demo Mode Modal
+    const openApiModalBtn = document.getElementById('open-api-modal-btn');
+    const closeApiModalBtn = document.getElementById('close-api-modal-btn');
+    const apiModalBackdrop = document.getElementById('api-modal-backdrop');
+
+    if (openApiModalBtn && apiModalBackdrop) {
+        openApiModalBtn.addEventListener('click', function() {
+            apiModalBackdrop.classList.add('open');
+        });
+    }
+
+    if (closeApiModalBtn && apiModalBackdrop) {
+        closeApiModalBtn.addEventListener('click', function() {
+            apiModalBackdrop.classList.remove('open');
+        });
+    }
+
+    if (apiModalBackdrop) {
+        apiModalBackdrop.addEventListener('click', function(e) {
+            if (e.target === apiModalBackdrop) {
+                apiModalBackdrop.classList.remove('open');
+            }
+        });
+    }
     
     // Close alert messages
-    const closeButtons = document.querySelectorAll('.close-btn');
+    const closeButtons = document.querySelectorAll('.alert .close-btn');
     
     closeButtons.forEach(button => {
         button.addEventListener('click', function() {
@@ -69,4 +94,4 @@ document.addEventListener('DOMContentLoaded', function() {
             link.parentElement.classList.add('active');
         }
     });
-}); 
+});

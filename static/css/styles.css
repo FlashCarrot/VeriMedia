@@ -1365,4 +1365,196 @@ footer {
 /* Make sure word-wrap works for long transcriptions */
 .transcription-content p {
     word-break: break-word;
-} 
+}
+
+/* API Key Status Badge & Configuration Modal */
+.api-status-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--gray-200);
+    background-color: var(--gray-100);
+    color: var(--gray-700);
+    transition: var(--transition);
+}
+
+.api-status-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+
+.api-status-btn .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.api-status-btn.status-live {
+    background-color: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: #047857;
+}
+
+.api-status-btn.status-live .status-dot {
+    background-color: var(--success-color);
+}
+
+.api-status-btn.status-demo {
+    background-color: rgba(245, 158, 11, 0.12);
+    border-color: rgba(245, 158, 11, 0.35);
+    color: #b45309;
+}
+
+.api-status-btn.status-demo .status-dot {
+    background-color: var(--warning-color);
+}
+
+.api-modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(15, 23, 42, 0.65);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.api-modal-backdrop.open {
+    display: flex;
+}
+
+.api-modal {
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: 520px;
+    padding: 1.75rem;
+}
+
+.api-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.api-modal-header h3 {
+    margin-bottom: 0;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.api-modal-desc {
+    font-size: 0.925rem;
+    color: var(--gray-600);
+    margin-bottom: 1.25rem;
+}
+
+.form-hint {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: 0.8rem;
+    color: var(--gray-500);
+}
+
+.checkbox-group .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--gray-700);
+}
+
+.api-modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    margin-top: 1.25rem;
+}
+
+/* Text Input Mode Switcher & Sample Presets */
+.input-mode-tabs {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.mode-tab-btn {
+    flex: 1;
+    padding: 0.65rem 1rem;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--gray-300);
+    background-color: var(--gray-100);
+    color: var(--gray-700);
+    font-weight: 600;
+    font-size: 0.925rem;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.mode-tab-btn.active {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.text-paste-area {
+    margin-bottom: 2rem;
+}
+
+.sample-presets-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.85rem;
+}
+
+.presets-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--gray-600);
+    margin-right: 0.25rem;
+}
+
+.preset-chip {
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid var(--gray-300);
+    background-color: white;
+    color: var(--gray-700);
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.preset-chip:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background-color: rgba(59, 130, 246, 0.05);
+}
+
+.text-paste-textarea {
+    resize: vertical;
+    min-height: 150px;
+    font-family: inherit;
+}
+ 
