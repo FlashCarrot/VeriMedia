@@ -2,9 +2,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9%2B-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
-[![CI](https://github.com/FlashCarrot/VeriMedia/actions/workflows/ci.yml/badge.svg)](https://github.com/FlashCarrot/VeriMedia/actions)
 [![UNICC Initiative](https://img.shields.io/badge/Initiative-UNICC%20Ethical%20AI-009EDB.svg)](https://www.unicc.org/)
-[![Multilingual](https://img.shields.io/badge/Languages-EN%20%7C%20ZH%20%7C%20FR%20%7C%20ES%20%7C%20AR-10b981.svg)](#features)
+[![Multilingual](https://img.shields.io/badge/Languages-EN%20%7C%20ZH%20%7C%20FR%20%7C%20ES%20%7C%20AR-10b981.svg)](#key-features)
 
 **VeriMedia** is an open-source, AI-powered multimodal media ethics toolkit developed as part of a **United Nations International Computing Centre (UNICC)** initiative. It empowers journalists, humanitarian organizations, researchers, and content creators to detect xenophobic framing, dehumanizing language, and misinformation across **text, audio, and video** in multiple languages, providing actionable editorial guidance to foster accurate and empathetic public discourse on refugees, migrants, and marginalized communities.
 
